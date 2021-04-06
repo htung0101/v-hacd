@@ -16,7 +16,7 @@ A second approach consists in computing an exact convex decomposition of a surfa
 
 ## Blender 2.8x
 
-A 2.8x port of the blender addon tool can be found here: https://github.com/andyp123/blender_vhacd, please go there and follow the instructions provided in that repository. 
+A 2.8x port of the blender addon tool can be found here: https://github.com/andyp123/blender_vhacd, please go there and follow the instructions provided in that repository.
 The in-repo included 2.7x version of the tool will not function for Blender 2.8+.
 
 ## Blender 2.7x
@@ -38,7 +38,15 @@ The in-repo included 2.7x version of the tool will not function for Blender 2.8+
 1. Modify the options as desired and select "OK."
 1. Note that the processing may take some time.  Increasing voxel resolution will particularly increase runtime.
 
-# Parameters 
+# Compile the folder
+
+After downloading cmake, run
+```
+python run.py --cmake
+```
+in the install directory. Then running `make` in the created build/linux directory, you can select the build/linux/test/testVHCAD file in blender and follow the rest of the instructions in the readme
+
+# Parameters
 | Parameter name | Description | Default value | Range |
 | ------------- | ------------- | ------------- | ---- |
 | resolution | maximum number of voxels generated during the voxelization stage	| 100,000 | 10,000-64,000,000 |
