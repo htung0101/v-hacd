@@ -40,11 +40,16 @@ The in-repo included 2.7x version of the tool will not function for Blender 2.8+
 
 # Compile the folder
 
-After downloading cmake, run
+After downloading cmake, go to the install directory and run
 ```
 python run.py --cmake
 ```
-in the install directory. Then running `make` in the created build/linux directory, you can select the build/linux/test/testVHCAD file in blender and follow the rest of the instructions in the readme
+
+Then running
+```
+make
+```
+in the created build/linux directory, you can select the build/linux/test/testVHCAD file in blender and follow the rest of the instructions in the readme
 
 # Parameters
 | Parameter name | Description | Default value | Range |
@@ -61,6 +66,7 @@ in the install directory. Then running `make` in the created build/linux directo
 | mode | 0: voxel-based approximate convex decomposition, 1: tetrahedron-based approximate convex decomposition | 0 | 0-1 |
 | maxNumVerticesPerCH |	controls the maximum number of triangles per convex-hull | 64 | 4-1024 |
 | minVolumePerCH | controls the adaptive sampling of the generated convex-hulls | 0.0001 | 0.0-0.01 |
+| maxVolumePerCH | controls the size of the generated convex-hulls | 0.3 | 0.0-1.0 |
 
 # Using V-HACD inside PyBullet
 
