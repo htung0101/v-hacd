@@ -68,6 +68,8 @@ in the created build/linux directory, you can select the build/linux/test/testVH
 | minVolumePerCH | controls the adaptive sampling of the generated convex-hulls | 0.0001 | 0.0-0.01 |
 | maxVolumePerCH | controls the size of the generated convex-hulls | 0.3 | 0.0-100.0 |
 | selectFromTopK | Add randomness by select splitting planes from top k pool | 1 | 1-100 |
+| maxBBoxLen     | add cost to convex full that has long bounding boxes on one of the axis | 0.5 | 0.01-10 |
+| eta |	weighted added to the bbox len (if the value is too large, the model will yield more shattered and slicely decopmosition) | 0.01 | 0.0001-1.0 |
 
 # Using V-HACD inside PyBullet
 

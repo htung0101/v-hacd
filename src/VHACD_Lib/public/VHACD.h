@@ -95,6 +95,7 @@ public:
         double m_concavity;
         double m_alpha;
         double m_beta;
+        double m_eta = 0.01;
         double m_bbox_len = 0.5;
         double m_minVolumePerCH;
         double m_maxVolumePerCH;

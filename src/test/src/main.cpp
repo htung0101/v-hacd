@@ -176,6 +176,7 @@ int main(int argc, char* argv[])
         msg << "\t convex-hull down-sampling                   " << params.m_paramsVHACD.m_convexhullDownsampling << endl;
         msg << "\t alpha                                       " << params.m_paramsVHACD.m_alpha << endl;
         msg << "\t beta                                        " << params.m_paramsVHACD.m_beta << endl;
+        msg << "\t eta                                         " << params.m_paramsVHACD.m_eta << endl;
         msg << "\t maxhulls                                    " << params.m_paramsVHACD.m_maxConvexHulls << endl;
         msg << "\t pca                                         " << params.m_paramsVHACD.m_pca << endl;
         msg << "\t mode                                        " << params.m_paramsVHACD.m_mode << endl;
@@ -331,6 +332,7 @@ void Usage(const Parameters& params)
     msg << "       --selectFromTopK            Add randomness by select splitting planes from top k pool(default=1, range=1-100)" << endl;
     msg << "       --randSeed                  random seed(default=1, range=1-10000)" << endl;
     msg << "       --maxBBoxLen                max bbox len(default=1, range=1-10000)" << endl;
+    msg << "       --eta                       penalty on split that exceed max bbox len(default=1, range=1-10000)" << endl;
     msg << "       --convexhullApproximation   Enable/disable approximation when computing convex-hulls (default=1, range={0,1})" << endl;
     msg << "       --oclAcceleration           Enable/disable OpenCL acceleration (default=0, range={0,1})" << endl;
     msg << "       --oclPlatformID             OpenCL platform id (default=0, range=0-# OCL platforms)" << endl;
@@ -419,6 +421,10 @@ void ParseParameters(int argc, char* argv[], Parameters& params)
         else if (!strcmp(argv[i], "--maxBBoxLen")) {
             if (++i < argc)
                 params.m_paramsVHACD.m_bbox_len = atof(argv[i]);
+        }
+        else if (!strcmp(argv[i], "--eta")) {
+            if (++i < argc)
+                params.m_paramsVHACD.m_eta = atof(argv[i]);
         }
         else if (!strcmp(argv[i], "--convexhullApproximation")) {
             if (++i < argc)

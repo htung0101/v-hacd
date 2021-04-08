@@ -700,14 +700,19 @@ struct PlaneScore{
     : plane(plane), total(total), x(x), concavity(concavity), balance(balance), symmetry(symmetry)
     {
     }
+    bool operator < (const PlaneScore& rhs) const // overloading both operators
+    {
+      return total > rhs.total; // if you want increasing order;(i.e increasing for minPQ)
+    }
+
 };
 
 
 struct compare_planes{
   public:
-  bool operator()(PlaneScore& a,PlaneScore& b) // overloading both operators
+  bool operator()(PlaneScore* a,PlaneScore* b) // overloading both operators
   {
-      return a.total > b.total; // if you want increasing order;(i.e increasing for minPQ)
+      return a -> total > b -> total; // if you want increasing order;(i.e increasing for minPQ)
    }
 };
 
@@ -716,6 +721,7 @@ struct compare_planes{
 //#define DEBUG_TEMP
 void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double volume, const SArray<Plane>& planes,
     const Vec3<double>& preferredCuttingDirection, const double w, const double alpha, const double beta,
+    const double eta,
     const int32_t convexhullDownsampling, const double progress0, const double progress1, Plane& bestPlane,
     double& minConcavity, const Parameters& params)
 {
@@ -816,7 +822,8 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
     timerComputeCost.Tic();
 #endif // DEBUG_TEMP
     // store top 5
-    priority_queue<PlaneScore, std::vector<PlaneScore>, compare_planes> planes_scores;
+    priority_queue<PlaneScore> planes_scores;
+    //priority_queue<PlaneScore*> planes_scores;
 #if USE_THREAD == 1 && _OPENMP
 #pragma omp parallel for
 #endif
@@ -960,7 +967,7 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
             else {
                 inputPSet->ComputeClippedVolumes(plane, volumeRight, volumeLeft);
             }
-            //double bboxcost = 0.1 * (bboxcostLeftCH + bboxcostRightCH);
+            double bboxcost = eta * (bboxcostLeftCH + bboxcostRightCH);
             double concavityLeft = ComputeConcavity(volumeLeft, volumeLeftCH, m_volumeCH0);
             double concavityRight = ComputeConcavity(volumeRight, volumeRightCH, m_volumeCH0);
             double concavity = (concavityLeft + concavityRight);
@@ -969,13 +976,13 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
             double balance = alpha * fabs(volumeLeft - volumeRight) / m_volumeCH0;
             double d = w * (preferredCuttingDirection[0] * plane.m_a + preferredCuttingDirection[1] * plane.m_b + preferredCuttingDirection[2] * plane.m_c);
             double symmetry = beta * d;
-            double total = concavity + balance + symmetry; // + bboxcost;
+            double total = concavity + balance + symmetry + bboxcost;
 
 #if USE_THREAD == 1 && _OPENMP
 #pragma omp critical
 #endif
             msg.str("");
-            //smsg << "score~~ " << total << std::endl;
+            //msg << "score~~ " << total << std::endl;
             //params.m_logger->Log(msg.str().c_str());
             PlaneScore temp(plane, total, x, concavity, balance, symmetry);
             planes_scores.push(temp);
@@ -1179,7 +1186,7 @@ void VHACD::ComputeACD(const Parameters& params)
             }
 
             // continue splitting if concavity is too large, or pieces too large, or pieces is too long
-            if ((concavity > params.m_concavity && concavity > error) || volumeCH > params.m_maxVolumePerCH || bboxcostCH > 0) {
+            if ((concavity > params.m_concavity && concavity > error) || volumeCH > params.m_maxVolumePerCH){
                 Vec3<double> preferredCuttingDirection;
                 double w = ComputePreferredCuttingDirection(pset, preferredCuttingDirection);
                 planes.Resize(0);
@@ -1207,6 +1214,7 @@ void VHACD::ComputeACD(const Parameters& params)
                     w,
                     concavity * params.m_alpha,
                     concavity * params.m_beta,
+                    params.m_eta,
                     params.m_convexhullDownsampling,
                     progress0,
                     progress1,
@@ -1237,6 +1245,7 @@ void VHACD::ComputeACD(const Parameters& params)
                         w,
                         concavity * params.m_alpha,
                         concavity * params.m_beta,
+                        params.m_eta,
                         1, // convexhullDownsampling = 1
                         progress1,
                         progress2,

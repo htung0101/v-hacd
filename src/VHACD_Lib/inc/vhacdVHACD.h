@@ -179,6 +179,7 @@ private:
         const double w,
         const double alpha,
         const double beta,
+        const double eta,
         const int32_t convexhullDownsampling,
         const double progress0,
         const double progress1,
