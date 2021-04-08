@@ -105,6 +105,7 @@ public:
         uint32_t m_convexhullDownsampling;
         uint32_t m_pca;
         uint32_t m_mode;
+        uint32_t m_topk;
         uint32_t m_convexhullApproximation;
         uint32_t m_oclAcceleration;
         uint32_t	m_maxConvexHulls;

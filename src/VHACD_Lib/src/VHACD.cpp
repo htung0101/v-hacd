@@ -22,6 +22,8 @@
 #include <iomanip>
 #include <limits>
 #include <sstream>
+#include <queue>
+using std::priority_queue;
 #if _OPENMP
 #include <omp.h>
 #endif // _OPENMP
@@ -678,6 +680,31 @@ inline double ComputeConcavity(const double volume, const double volumeCH, const
     return fabs(volumeCH - volume) / volume0;
 }
 
+struct PlaneScore{
+    Plane plane;
+    double total;
+    int32_t x;
+    double concavity;
+    double balance;
+    double symmetry;
+
+    PlaneScore(Plane plane, double total, int32_t x, double concavity, double balance, double symmetry)
+    : plane(plane), total(total), x(x), concavity(concavity), balance(balance), symmetry(symmetry)
+    {
+    }
+};
+
+
+struct compare_planes{
+  public:
+  bool operator()(PlaneScore& a,PlaneScore& b) // overloading both operators
+  {
+      return a.total > b.total; // if you want increasing order;(i.e increasing for minPQ)
+   }
+};
+
+
+
 //#define DEBUG_TEMP
 void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double volume, const SArray<Plane>& planes,
     const Vec3<double>& preferredCuttingDirection, const double w, const double alpha, const double beta,
@@ -687,7 +714,8 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
     if (GetCancel()) {
         return;
     }
-    char msg[256];
+    char msg_carray[256];
+    std::ostringstream msg;
     size_t nPrimitives = inputPSet->GetNPrimitives();
     bool oclAcceleration = (nPrimitives > OCL_MIN_NUM_PRIMITIVES && params.m_oclAcceleration && params.m_mode == 0) ? true : false;
     int32_t iBest = -1;
@@ -779,7 +807,8 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
     Timer timerComputeCost;
     timerComputeCost.Tic();
 #endif // DEBUG_TEMP
-
+    // store top 5
+    priority_queue<PlaneScore, std::vector<PlaneScore>, compare_planes> planes_scores;
 #if USE_THREAD == 1 && _OPENMP
 #pragma omp parallel for
 #endif
@@ -922,6 +951,12 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
 #if USE_THREAD == 1 && _OPENMP
 #pragma omp critical
 #endif
+            msg.str("");
+            //smsg << "score~~ " << total << std::endl;
+            //params.m_logger->Log(msg.str().c_str());
+            PlaneScore temp(plane, total, x, concavity, balance, symmetry);
+            planes_scores.push(temp);
+
             {
                 if (total < minTotal || (total == minTotal && x < iBest)) {
                     minConcavity = concavity;
@@ -939,7 +974,48 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
                 }
             }
         }
+
+        //msg.str("");
+        //msg << "plane score queue size " << planes_scores.size() << std::endl;
+        //params.m_logger->Log(msg.str().c_str());
+
     }
+
+
+    //msg.str("");
+    //msg << "         total number of planes " << planes_scores.size() << std::endl;
+    //params.m_logger->Log(msg.str().c_str());
+
+    //select top k
+    int k = params.m_topk;
+    int rand_id = rand() % k;
+    int timer = 0;
+
+    PlaneScore selected_plane = planes_scores.top();
+    while (!planes_scores.empty())
+    {
+
+        //msg.str("");
+        //msg << " plane scores"
+        //    << " " << planes_scores.top().total << std::endl;
+        //params.m_logger->Log(msg.str().c_str());
+        selected_plane = planes_scores.top();
+        planes_scores.pop();
+        if(timer == rand_id) break;
+        timer += 1;
+    }
+    minConcavity = selected_plane.concavity;
+    minBalance = selected_plane.balance;
+    minSymmetry = selected_plane.symmetry;
+    bestPlane = selected_plane.plane;
+    minTotal = selected_plane.total;
+    iBest = selected_plane.x;
+
+    msg.str("");
+    msg << "         selected plane (from top " << k << ") scores"
+        << " " << minTotal << std::endl;
+
+    params.m_logger->Log(msg.str().c_str());
 
 #ifdef DEBUG_TEMP
     timerComputeCost.Toc();
@@ -966,8 +1042,8 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
     delete[] chPts;
     delete[] chs;
     if (params.m_logger) {
-        sprintf(msg, "\n\t\t\t Best  %04i T=%2.6f C=%2.6f B=%2.6f S=%2.6f (%1.1f, %1.1f, %1.1f, %3.3f)\n\n", iBest, minTotal, minConcavity, minBalance, minSymmetry, bestPlane.m_a, bestPlane.m_b, bestPlane.m_c, bestPlane.m_d);
-        params.m_logger->Log(msg);
+        sprintf(msg_carray, "\n\t\t\t Best  %04i T=%2.6f C=%2.6f B=%2.6f S=%2.6f (%1.1f, %1.1f, %1.1f, %3.3f)\n\n", iBest, minTotal, minConcavity, minBalance, minSymmetry, bestPlane.m_a, bestPlane.m_b, bestPlane.m_c, bestPlane.m_d);
+        params.m_logger->Log(msg_carray);
     }
 }
 void VHACD::ComputeACD(const Parameters& params)

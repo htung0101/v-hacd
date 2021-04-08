@@ -182,6 +182,7 @@ int main(int argc, char* argv[])
         msg << "\t max. vertices per convex-hull               " << params.m_paramsVHACD.m_maxNumVerticesPerCH << endl;
         msg << "\t min. volume to add vertices to convex-hulls " << params.m_paramsVHACD.m_minVolumePerCH << endl;
         msg << "\t max. volume to add vertices to convex-hulls " << params.m_paramsVHACD.m_maxVolumePerCH << endl;
+        msg << "\t select plane from top k                     " << params.m_paramsVHACD.m_topk << endl;
         msg << "\t convex-hull approximation                   " << params.m_paramsVHACD.m_convexhullApproximation << endl;
         msg << "\t OpenCL acceleration                         " << params.m_paramsVHACD.m_oclAcceleration << endl;
         msg << "\t OpenCL platform ID                          " << params.m_oclPlatformID << endl;
@@ -324,6 +325,8 @@ void Usage(const Parameters& params)
     msg << "       --mode                      0: voxel-based approximate convex decomposition, 1: tetrahedron-based approximate convex decomposition (default=0, range={0,1})" << endl;
     msg << "       --maxNumVerticesPerCH       Controls the maximum number of triangles per convex-hull (default=64, range=4-1024)" << endl;
     msg << "       --minVolumePerCH            Controls the adaptive sampling of the generated convex-hulls (default=0.0001, range=0.0-0.01)" << endl;
+    msg << "       --maxVolumePerCH            Controls the maximum size of the convex-hulls (default=0.0001, range=0.0-0.01)" << endl;
+    msg << "       --selectFromTopK            Add randomness by select splitting planes from top k pool(default=1, range=1-100)" << endl;
     msg << "       --convexhullApproximation   Enable/disable approximation when computing convex-hulls (default=1, range={0,1})" << endl;
     msg << "       --oclAcceleration           Enable/disable OpenCL acceleration (default=0, range={0,1})" << endl;
     msg << "       --oclPlatformID             OpenCL platform id (default=0, range=0-# OCL platforms)" << endl;
@@ -400,6 +403,10 @@ void ParseParameters(int argc, char* argv[], Parameters& params)
         else if (!strcmp(argv[i], "--maxVolumePerCH")) {
             if (++i < argc)
                 params.m_paramsVHACD.m_maxVolumePerCH = atof(argv[i]);
+        }
+        else if (!strcmp(argv[i], "--selectFromTopK")) {
+            if (++i < argc)
+                params.m_paramsVHACD.m_topk = atof(argv[i]);
         }
         else if (!strcmp(argv[i], "--convexhullApproximation")) {
             if (++i < argc)

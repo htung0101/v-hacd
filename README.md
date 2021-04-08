@@ -59,14 +59,15 @@ in the created build/linux directory, you can select the build/linux/test/testVH
 | concavity |	maximum concavity |	0.0025 | 0.0-1.0 |
 | planeDownsampling |	controls the granularity of the search for the "best" clipping plane | 4 | 1-16 |
 | convexhullDownsampling | controls the precision of the convex-hull generation process during the clipping plane selection stage | 4 | 1-16 |
-| alpha | controls the bias toward clipping along symmetry planes | 0.05 | 0.0-1.0 |
-| beta | controls the bias toward clipping along revolution axes | 0.05 | 0.0-1.0 |
+| alpha | controls the bias toward clipping along symmetry planes (want the 2 piece to be balanced) | 0.05 | 0.0-1.0 |
+| beta | controls the bias toward clipping along revolution axes (want the 2 piece to be symmetric) | 0.05 | 0.0-1.0 |
 | gamma |	maximum allowed concavity during the merge stage | 0.00125 | 0.0-1.0 |
 | pca |	enable/disable normalizing the mesh before applying the convex decomposition | 0 | 0-1 |
 | mode | 0: voxel-based approximate convex decomposition, 1: tetrahedron-based approximate convex decomposition | 0 | 0-1 |
 | maxNumVerticesPerCH |	controls the maximum number of triangles per convex-hull | 64 | 4-1024 |
 | minVolumePerCH | controls the adaptive sampling of the generated convex-hulls | 0.0001 | 0.0-0.01 |
-| maxVolumePerCH | controls the size of the generated convex-hulls | 0.3 | 0.0-1.0 |
+| maxVolumePerCH | controls the size of the generated convex-hulls | 0.3 | 0.0-100.0 |
+| selectFromTopK | Add randomness by select splitting planes from top k pool | 1 | 1-100 |
 
 # Using V-HACD inside PyBullet
 
