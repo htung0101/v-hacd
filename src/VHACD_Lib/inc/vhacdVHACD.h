@@ -54,7 +54,7 @@ public:
         Init();
     }
     //! Destructor.
-    ~VHACD(void) 
+    ~VHACD(void)
     {
     }
     uint32_t GetNConvexHulls() const
@@ -163,6 +163,9 @@ private:
         m_barycenter[0] = m_barycenter[1] = m_barycenter[2] = 0.0;
         m_rot[0][0] = m_rot[1][1] = m_rot[2][2] = 1.0;
         SetCancel(false);
+    }
+    float max3(Vec3<double> v){
+        return std::max(std::max(v[0], v[1]), v[2]);
     }
     void ComputePrimitiveSet(const Parameters& params);
     void ComputeACD(const Parameters& params);

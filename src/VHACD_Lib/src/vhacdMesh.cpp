@@ -1,15 +1,15 @@
 /* Copyright (c) 2011 Khaled Mamou (kmamou at gmail dot com)
  All rights reserved.
- 
- 
+
+
  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- 
+
  1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- 
+
  2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- 
+
  3. The names of the contributors may not be used to endorse or promote products derived from this software without specific prior written permission.
- 
+
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -21,6 +21,7 @@
 #include "vhacdMesh.h"
 #include "FloatMath.h"
 #include <fstream>
+#include <algorithm>
 #include <iosfwd>
 #include <iostream>
 #include <stdio.h>
@@ -180,6 +181,58 @@ bool Mesh::IsInside(const Vec3<double>& pt) const
     }
     return true;
 }
+
+
+float max3(Vec3<double> v){
+
+    return std::max(std::max(v[0], v[1]), v[2]);
+}
+
+double Mesh::ComputeBBoxCost(double max_bbox_len)
+{
+
+    Vec3<double>bboxCH = ComputeBBox();
+    double bboxcostCH = 0;
+    // hinge loss
+    if ((max3(bboxCH) - max_bbox_len) > 0 ){ //some dimension of the box is too large
+        bboxcostCH = abs(max3(bboxCH) - max_bbox_len);
+    }
+    return bboxcostCH;
+}
+
+
+
+Vec3<double> Mesh::ComputeBBox(void)
+{
+    const size_t nPoints = GetNPoints();
+    if (nPoints == 0)
+        return Vec3<double>();
+    Vec3<double> minBB = m_points[0];
+    Vec3<double> maxBB = m_points[0];
+    double x, y, z;
+    for (size_t v = 1; v < nPoints; v++) {
+        x = m_points[v][0];
+        y = m_points[v][1];
+        z = m_points[v][2];
+        if (x < minBB[0])
+            minBB[0] = x;
+        else if (x > maxBB[0])
+            maxBB[0] = x;
+        if (y < minBB[1])
+            minBB[1] = y;
+        else if (y > maxBB[1])
+            maxBB[1] = y;
+        if (z < minBB[2])
+            minBB[2] = z;
+        else if (z > maxBB[2])
+            maxBB[2] = z;
+    }
+    //return (m_diag = (maxBB - minBB).GetNorm());
+    return (maxBB - minBB);
+}
+
+
+
 double Mesh::ComputeDiagBB()
 {
     const size_t nPoints = GetNPoints();

@@ -183,6 +183,8 @@ int main(int argc, char* argv[])
         msg << "\t min. volume to add vertices to convex-hulls " << params.m_paramsVHACD.m_minVolumePerCH << endl;
         msg << "\t max. volume to add vertices to convex-hulls " << params.m_paramsVHACD.m_maxVolumePerCH << endl;
         msg << "\t select plane from top k                     " << params.m_paramsVHACD.m_topk << endl;
+        msg << "\t random seed                                 " << params.m_paramsVHACD.m_randseed << endl;
+        msg << "\t max. bbox length for each split             " << params.m_paramsVHACD.m_bbox_len << endl;
         msg << "\t convex-hull approximation                   " << params.m_paramsVHACD.m_convexhullApproximation << endl;
         msg << "\t OpenCL acceleration                         " << params.m_paramsVHACD.m_oclAcceleration << endl;
         msg << "\t OpenCL platform ID                          " << params.m_oclPlatformID << endl;
@@ -327,6 +329,8 @@ void Usage(const Parameters& params)
     msg << "       --minVolumePerCH            Controls the adaptive sampling of the generated convex-hulls (default=0.0001, range=0.0-0.01)" << endl;
     msg << "       --maxVolumePerCH            Controls the maximum size of the convex-hulls (default=0.0001, range=0.0-0.01)" << endl;
     msg << "       --selectFromTopK            Add randomness by select splitting planes from top k pool(default=1, range=1-100)" << endl;
+    msg << "       --randSeed                  random seed(default=1, range=1-10000)" << endl;
+    msg << "       --maxBBoxLen                max bbox len(default=1, range=1-10000)" << endl;
     msg << "       --convexhullApproximation   Enable/disable approximation when computing convex-hulls (default=1, range={0,1})" << endl;
     msg << "       --oclAcceleration           Enable/disable OpenCL acceleration (default=0, range={0,1})" << endl;
     msg << "       --oclPlatformID             OpenCL platform id (default=0, range=0-# OCL platforms)" << endl;
@@ -407,6 +411,14 @@ void ParseParameters(int argc, char* argv[], Parameters& params)
         else if (!strcmp(argv[i], "--selectFromTopK")) {
             if (++i < argc)
                 params.m_paramsVHACD.m_topk = atof(argv[i]);
+        }
+        else if (!strcmp(argv[i], "--randSeed")) {
+            if (++i < argc)
+                params.m_paramsVHACD.m_randseed = atof(argv[i]);
+        }
+        else if (!strcmp(argv[i], "--maxBBoxLen")) {
+            if (++i < argc)
+                params.m_paramsVHACD.m_bbox_len = atof(argv[i]);
         }
         else if (!strcmp(argv[i], "--convexhullApproximation")) {
             if (++i < argc)

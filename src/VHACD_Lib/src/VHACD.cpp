@@ -334,6 +334,14 @@ bool VHACD::OCLInit(void* const oclDevice, IUserLogger* const logger)
     return false;
 #endif //CL_VERSION_1_1
 }
+
+
+
+//float max3(Vec3<double> v){
+//
+//    return std::max(std::max(v[0], v[1]), v[2]);
+//}
+
 bool VHACD::OCLRelease(IUserLogger* const logger)
 {
 #ifdef CL_VERSION_1_1
@@ -915,6 +923,20 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
             double volumeLeftCH = leftCH.ComputeVolume();
             double volumeRightCH = rightCH.ComputeVolume();
 
+            Vec3<double> bboxLeftCH = leftCH.ComputeBBox();
+            Vec3<double> bboxRightCH = rightCH.ComputeBBox();
+
+            double max_bbox_len = params.m_bbox_len;
+            // hinge loss
+            double bboxcostLeftCH = leftCH.ComputeBBoxCost(max_bbox_len);
+            double bboxcostRightCH = rightCH.ComputeBBoxCost(max_bbox_len);
+
+
+            //msg.str("");
+            //msg << "         bboxcosts"
+            //    << " <" << bboxcostLeftCH << "," << bboxcostRightCH  << ">"<< std::endl;
+
+            //params.m_logger->Log(msg.str().c_str());
             // compute clipped volumes
             double volumeLeft = 0.0;
             double volumeRight = 0.0;
@@ -938,6 +960,7 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
             else {
                 inputPSet->ComputeClippedVolumes(plane, volumeRight, volumeLeft);
             }
+            //double bboxcost = 0.1 * (bboxcostLeftCH + bboxcostRightCH);
             double concavityLeft = ComputeConcavity(volumeLeft, volumeLeftCH, m_volumeCH0);
             double concavityRight = ComputeConcavity(volumeRight, volumeRightCH, m_volumeCH0);
             double concavity = (concavityLeft + concavityRight);
@@ -946,7 +969,7 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
             double balance = alpha * fabs(volumeLeft - volumeRight) / m_volumeCH0;
             double d = w * (preferredCuttingDirection[0] * plane.m_a + preferredCuttingDirection[1] * plane.m_b + preferredCuttingDirection[2] * plane.m_c);
             double symmetry = beta * d;
-            double total = concavity + balance + symmetry;
+            double total = concavity + balance + symmetry; // + bboxcost;
 
 #if USE_THREAD == 1 && _OPENMP
 #pragma omp critical
@@ -987,6 +1010,7 @@ void VHACD::ComputeBestClippingPlane(const PrimitiveSet* inputPSet, const double
     //params.m_logger->Log(msg.str().c_str());
 
     //select top k
+    srand(params.m_randseed);
     int k = params.m_topk;
     int rand_id = rand() % k;
     int timer = 0;
@@ -1134,6 +1158,9 @@ void VHACD::ComputeACD(const Parameters& params)
             double concavity = ComputeConcavity(volume, volumeCH, m_volumeCH0);
             double error = 1.01 * pset->ComputeMaxVolumeError() / m_volumeCH0;
 
+            double max_bbox_len = params.m_bbox_len;
+            double bboxcostCH = pset->GetConvexHull().ComputeBBoxCost(max_bbox_len);
+
             if (firstIteration) {
                 firstIteration = false;
             }
@@ -1143,6 +1170,7 @@ void VHACD::ComputeACD(const Parameters& params)
                 msg << "\t -> Part[" << p
                     << "] C  = " << concavity
                     << ", E  = " << error
+                    << ", BBoxCost = " << bboxcostCH
                     << ", Volume = " << volumeCH
                     << ", VS = " << pset->GetNPrimitivesOnSurf()
                     << ", VI = " << pset->GetNPrimitivesInsideSurf()
@@ -1150,7 +1178,8 @@ void VHACD::ComputeACD(const Parameters& params)
                 params.m_logger->Log(msg.str().c_str());
             }
 
-            if ((concavity > params.m_concavity && concavity > error) || volumeCH > params.m_maxVolumePerCH) {
+            // continue splitting if concavity is too large, or pieces too large, or pieces is too long
+            if ((concavity > params.m_concavity && concavity > error) || volumeCH > params.m_maxVolumePerCH || bboxcostCH > 0) {
                 Vec3<double> preferredCuttingDirection;
                 double w = ComputePreferredCuttingDirection(pset, preferredCuttingDirection);
                 planes.Resize(0);

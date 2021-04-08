@@ -95,6 +95,7 @@ public:
         double m_concavity;
         double m_alpha;
         double m_beta;
+        double m_bbox_len = 0.5;
         double m_minVolumePerCH;
         double m_maxVolumePerCH;
         IUserCallback* m_callback;
@@ -105,7 +106,8 @@ public:
         uint32_t m_convexhullDownsampling;
         uint32_t m_pca;
         uint32_t m_mode;
-        uint32_t m_topk;
+        uint32_t m_topk = 1;
+        uint32_t m_randseed = 1;
         uint32_t m_convexhullApproximation;
         uint32_t m_oclAcceleration;
         uint32_t	m_maxConvexHulls;
